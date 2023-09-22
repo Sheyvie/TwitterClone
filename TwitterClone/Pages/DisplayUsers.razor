@@ -1,0 +1,123 @@
+﻿@page "/user"
+
+
+
+@inject IUserInterface userInterface
+@inject IPostInterface postInterface
+@inject ICommentInterface commentInterface
+
+  <h3>Select a User</h3>
+
+    <select @onchange="OnUserSelectionChange">
+        @foreach (var user in users)
+        {
+            <option >Select User</option>
+            <option value="@user.id">@user.name  </option>
+        }
+    </select>
+
+
+
+@if (selectedUser != null)
+{
+    <h4>User Details</h4>
+    <p>@selectedUser.name</p>
+
+    <h4>User's Posts</h4>
+    <ul>
+        @foreach (var post in userPosts)
+        {
+            <li>
+                <a @onclick="() => ShowPostComments(post.userId)">@post.title</a>
+            
+              <strong>@post.title</strong>
+                <p>@post.body</p>
+            
+            </li>
+        }
+    </ul>
+
+   
+
+    <h4>Comments for Selected Post</h4>
+    <ul>
+        @foreach (var comment in postComments)
+        {
+            <li>@comment.postId</li>
+        }
+    </ul>
+}
+
+
+
+@code {
+    private int selectedUserId;
+    private UserDto selectedUser;
+    private List<UserDto> users =new List<UserDto>();
+    private List<PostDto> userPosts =new List<PostDto>();
+    private List<CommentDto> postComments =new List<CommentDto>();
+
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Fetch user data when the component is initialized
+        users = await userInterface.GetUsersAsync();
+        if (selectedUser != null)
+        {
+            // Fetch the user's posts and populate the userPosts collection
+            userPosts = await postInterface.GetPostsAsync();
+        }
+
+    }
+    private void OnUserSelectionChange(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value.ToString(), out int selectedId))
+        {
+            selectedUserId = selectedId;
+            // Fetch user posts when the user selection changes
+            FetchUserPosts(selectedId);
+
+            
+        }
+    }
+    private async Task FetchUserPosts(int id)
+    {
+        try
+        {
+            // Fetch posts for the selected user based on userId
+            userPosts = await postInterface.GetPostsAsync();
+
+            
+            
+        }
+        catch (Exception ex)
+        {
+            // Handle and log any errors
+            Console.WriteLine($"Error fetching user posts: {ex.Message}");
+        }
+
+    }
+ 
+        
+     private async Task ShowPostComments(int id)
+    {
+
+        try
+        {
+            // Fetch comments for the selected post based on postId
+            postComments = await commentInterface.GetCommentsAsync();
+
+            
+            
+        }
+        catch (Exception ex)
+        {
+            
+            Console.WriteLine($"Error fetching comments: {ex.Message}");
+        }
+    }
+}
+
+
